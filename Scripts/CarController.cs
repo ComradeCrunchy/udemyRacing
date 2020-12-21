@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Audio;
 
 public class CarController : MonoBehaviour
 {
@@ -24,6 +25,9 @@ public class CarController : MonoBehaviour
     public float maxEmission = 25f;
     public float emissionFadeSpeed = 20f;
     private float emissionRate;
+    public AudioSource engineSound;
+    public AudioSource skidSFX;
+    public float skidFadeSpeed = 2f;
 
     private void Start()
     {
@@ -53,19 +57,34 @@ public class CarController : MonoBehaviour
         emissionRate = Mathf.MoveTowards(emissionRate, 0f, emissionFadeSpeed * Time.deltaTime);
         if (grounded && (Mathf.Abs(turnInput) > 0.5f || (rb.velocity.magnitude < maxSpeed * 0.5f && rb.velocity.magnitude != 0)))
         {
-            emissionRate = 25f;
+            emissionRate = maxEmission;
         }
-
         for (int i = 0; i < dustTrail.Length; i++)
         {
             var emissionModule = dustTrail[i].emission;
 
             emissionModule.rateOverTime = emissionRate;
         }
-
-        if (rb.velocity.magnitude <= 0.5f)
+        if (speedInput <= 0.5f && Mathf.Abs(turnInput) <= 0.2f)
         {
             emissionRate = 0f;
+        }
+
+        if (engineSound != null)
+        {
+            engineSound.pitch = 1f + ((rb.velocity.magnitude / maxSpeed) * 2f);
+        }
+
+        if (skidSFX != null)
+        {
+            if (Mathf.Abs(turnInput) > 0.5f && speedInput > 3.5f && grounded)
+            {
+                skidSFX.volume = 1f;
+            }
+            else
+            {
+                skidSFX.volume = Mathf.MoveTowards(skidSFX.volume, 0f, skidFadeSpeed * Time.deltaTime);
+            }
         }
     }
 
